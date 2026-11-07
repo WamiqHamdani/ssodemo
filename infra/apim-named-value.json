@@ -1,0 +1,9 @@
+{
+  "properties": {
+    "displayName": "apim-backend-key",
+    "secret": true,
+    "keyVault": {
+      "secretIdentifier": "https://ssodemo-kv.vault.azure.net/secrets/apim-backend-key"
+    }
+  }
+}

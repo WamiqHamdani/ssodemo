@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 
@@ -16,6 +18,27 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
+
+// In Azure, BackendKey resolves from Key Vault; only APIM knows it, so direct calls to
+// the App Service get 403. Unset locally, so the Vite proxy keeps working. /health stays open.
+var backendKey = app.Configuration["BackendKey"];
+if (!string.IsNullOrEmpty(backendKey))
+{
+    var expected = Encoding.UTF8.GetBytes(backendKey);
+    app.Use(async (ctx, next) =>
+    {
+        if (!ctx.Request.Path.StartsWithSegments("/health"))
+        {
+            var sent = Encoding.UTF8.GetBytes(ctx.Request.Headers["X-Backend-Key"].ToString());
+            if (!CryptographicOperations.FixedTimeEquals(sent, expected))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return;
+            }
+        }
+        await next();
+    });
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

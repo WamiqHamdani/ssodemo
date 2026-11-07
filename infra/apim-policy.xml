@@ -21,6 +21,10 @@
         <issuer>https://login.microsoftonline.com/7aafd144-00c5-41aa-8a3b-cf36abe1ff99/v2.0</issuer>
       </issuers>
     </validate-jwt>
+    <!-- Proves to the App Service that the call came through APIM; value is a Key Vault-backed named value -->
+    <set-header name="X-Backend-Key" exists-action="override">
+      <value>{{apim-backend-key}}</value>
+    </set-header>
   </inbound>
   <backend><base /></backend>
   <outbound><base /></outbound>
