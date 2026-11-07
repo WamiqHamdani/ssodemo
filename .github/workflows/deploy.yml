@@ -1,0 +1,65 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # OIDC login to Azure, no stored secrets
+  contents: read
+
+env:
+  AZURE_CLIENT_ID: 58d56991-ef39-4f6b-a376-8b932d5bc5a2      # ssodemo-github-deploy
+  AZURE_TENANT_ID: 1e915a80-22eb-41f8-b43d-321166043d25
+  AZURE_SUBSCRIPTION_ID: a5514668-6869-456c-a88b-79a5f0568d97
+  RESOURCE_GROUP: ssodemo-rg
+  WEBAPP_NAME: ssodemo-api
+  SWA_NAME: ssodemo-web
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet publish SsoDemo.Server -c Release -o publish
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.WEBAPP_NAME }}
+          package: publish
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci && npm run build
+        working-directory: ssodemo.client
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+      - name: Get Static Web App deployment token
+        id: swa
+        run: |
+          token=$(az staticwebapp secrets list -n $SWA_NAME -g $RESOURCE_GROUP --query properties.apiKey -o tsv)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa.outputs.token }}
+          action: upload
+          app_location: ssodemo.client/dist
+          skip_app_build: true
+          skip_api_build: true

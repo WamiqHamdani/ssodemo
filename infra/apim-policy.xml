@@ -1,0 +1,28 @@
+<policies>
+  <inbound>
+    <base />
+    <cors allow-credentials="false">
+      <allowed-origins>
+        <origin>https://lively-field-0ea2ca500.8.azurestaticapps.net</origin>
+        <origin>http://localhost:5173</origin>
+      </allowed-origins>
+      <allowed-methods><method>GET</method></allowed-methods>
+      <allowed-headers><header>Authorization</header><header>Content-Type</header></allowed-headers>
+    </cors>
+    <!-- Reject requests without a valid Entra token before they reach the backend -->
+    <validate-jwt header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized">
+      <openid-config url="https://login.microsoftonline.com/7aafd144-00c5-41aa-8a3b-cf36abe1ff99/v2.0/.well-known/openid-configuration" />
+      <audiences>
+        <audience>api://341e1f51-57c6-42b0-a184-90089995ab08</audience>
+        <audience>341e1f51-57c6-42b0-a184-90089995ab08</audience>
+      </audiences>
+      <issuers>
+        <issuer>https://sts.windows.net/7aafd144-00c5-41aa-8a3b-cf36abe1ff99/</issuer>
+        <issuer>https://login.microsoftonline.com/7aafd144-00c5-41aa-8a3b-cf36abe1ff99/v2.0</issuer>
+      </issuers>
+    </validate-jwt>
+  </inbound>
+  <backend><base /></backend>
+  <outbound><base /></outbound>
+  <on-error><base /></on-error>
+</policies>
