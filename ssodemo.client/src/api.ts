@@ -10,7 +10,7 @@ export interface Me {
 }
 
 // forceRefresh skips the cached token, e.g. to pick up newly assigned roles
-async function getToken(forceRefresh = false): Promise<string> {
+export async function getToken(forceRefresh = false): Promise<string> {
   // Right after the login redirect the active account may not be set yet
   const account = msalInstance.getActiveAccount() ?? msalInstance.getAllAccounts()[0]
   if (!account) throw new Error('Not signed in')

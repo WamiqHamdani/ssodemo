@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react'
 import { apiScopes } from './authConfig'
-import { callApi, getMe, type Me } from './api'
+import { callApi, getMe, getToken, type Me } from './api'
 
 export default function App() {
   const { instance, accounts } = useMsal()
@@ -61,7 +61,35 @@ function Profile() {
       <h2>Role-protected endpoints</h2>
       <RoleCheck label="User area" path="/user-area" />
       <RoleCheck label="Admin area" path="/admin-area" />
+
+      <AccessToken />
     </section>
+  )
+}
+
+// Shows the API access token so it can be pasted into APIM's Test tab (Authorization header)
+function AccessToken() {
+  const [token, setToken] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const show = () => getToken().then(setToken).catch((e: Error) => setToken(`Error: ${e.message}`))
+  const copy = () => {
+    if (!token) return
+    navigator.clipboard.writeText(`Bearer ${token}`).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <>
+      <h2>Access token</h2>
+      <p>
+        <button onClick={show}>{token ? 'Refresh token' : 'Show token'}</button>{' '}
+        {token && <button onClick={copy}>{copied ? 'Copied!' : 'Copy "Bearer …" header value'}</button>}
+      </p>
+      {token && <textarea readOnly value={token} rows={6} style={{ width: '100%', fontFamily: 'monospace', fontSize: 12 }} />}
+    </>
   )
 }
 
