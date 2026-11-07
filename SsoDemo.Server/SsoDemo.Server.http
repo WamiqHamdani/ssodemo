@@ -1,0 +1,18 @@
+@host = http://localhost:5163
+# Paste an access token from the browser (Network tab → Authorization header)
+@token = <access-token>
+
+GET {{host}}/api/me
+Authorization: Bearer {{token}}
+
+###
+
+# Needs the User or Admin role
+GET {{host}}/api/user-area
+Authorization: Bearer {{token}}
+
+###
+
+# Needs the Admin role
+GET {{host}}/api/admin-area
+Authorization: Bearer {{token}}

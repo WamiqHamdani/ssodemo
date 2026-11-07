@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ssodemo.client/ssodemo.client.esproj" />
+  <Project Path="SsoDemo.Server/SsoDemo.Server.csproj" />
+</Solution>
