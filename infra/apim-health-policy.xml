@@ -1,0 +1,10 @@
+<!-- Operation policy for GET /api/health: no <base /> in inbound, so the API-level
+     validate-jwt is skipped (anonymous); routes to the backend's root /health -->
+<policies>
+  <inbound>
+    <set-backend-service base-url="https://ssodemo-api.azurewebsites.net" />
+  </inbound>
+  <backend><base /></backend>
+  <outbound><base /></outbound>
+  <on-error><base /></on-error>
+</policies>
