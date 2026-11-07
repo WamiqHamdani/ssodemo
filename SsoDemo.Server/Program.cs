@@ -13,10 +13,15 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("UserOrAdmin", p => p.RequireAssertion(ctx => HasAnyRole(ctx.User, "User", "Admin")))
     .AddPolicy("Admin", p => p.RequireAssertion(ctx => HasAnyRole(ctx.User, "Admin")));
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Anonymous liveness probe for App Service health check / monitoring
+app.MapHealthChecks("/health").AllowAnonymous();
 
 var api = app.MapGroup("/api")
     .RequireAuthorization()
