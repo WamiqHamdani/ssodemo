@@ -70,15 +70,17 @@ function Profile() {
 // Shows the API access token so it can be pasted into APIM's Test tab (Authorization header)
 function AccessToken() {
   const [token, setToken] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
 
   const show = () => getToken().then(setToken).catch((e: Error) => setToken(`Error: ${e.message}`))
   const copy = () => {
     if (!token) return
-    navigator.clipboard.writeText(`Bearer ${token}`).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+    // Clipboard access can be denied (permissions, embedded browsers); tell the user instead of failing silently
+    navigator.clipboard
+      .writeText(`Bearer ${token}`)
+      .then(() => setCopyStatus('copied'))
+      .catch(() => setCopyStatus('failed'))
+      .finally(() => setTimeout(() => setCopyStatus('idle'), 4000))
   }
 
   return (
@@ -86,7 +88,10 @@ function AccessToken() {
       <h2>Access token</h2>
       <p>
         <button onClick={show}>{token ? 'Refresh token' : 'Show token'}</button>{' '}
-        {token && <button onClick={copy}>{copied ? 'Copied!' : 'Copy "Bearer …" header value'}</button>}
+        {token && <button onClick={copy}>{copyStatus === 'copied' ? 'Copied!' : 'Copy "Bearer …" header value'}</button>}
+        {copyStatus === 'failed' && (
+          <span className="error"> Copy blocked by the browser. Select the token below, copy it, and type "Bearer " before it.</span>
+        )}
       </p>
       {token && <textarea readOnly value={token} rows={6} style={{ width: '100%', fontFamily: 'monospace', fontSize: 12 }} />}
     </>
